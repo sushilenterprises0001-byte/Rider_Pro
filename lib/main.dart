@@ -1,8 +1,7 @@
+
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const RiderProApp());
-}
+void main() => runApp(const RiderProApp());
 
 class RiderProApp extends StatelessWidget {
   const RiderProApp({super.key});
@@ -11,56 +10,7 @@ class RiderProApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginPage(),
-    );
-  }
-}
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final pin = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("RiderPro Stock")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Icon(Icons.lock, size: 80),
-            const SizedBox(height: 20),
-            TextField(
-              controller: pin,
-              keyboardType: TextInputType.number,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: "Enter PIN",
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (pin.text == "1234") {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const HomePage(),
-                    ),
-                  );
-                }
-              },
-              child: const Text("LOGIN"),
-            )
-          ],
-        ),
-      ),
+      home: const HomePage(),
     );
   }
 }
@@ -73,73 +23,76 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final brand = TextEditingController();
   final model = TextEditingController();
   final qty = TextEditingController();
+  final buy = TextEditingController();
+  final sell = TextEditingController();
 
-  List<Map<String, dynamic>> stock = [];
-
-  int get total =>
-      stock.fold(0, (sum, item) => sum + (item["qty"] as int));
+  List<Map<String, dynamic>> items = [];
+  double profit = 0;
 
   void addProduct() {
+    if (model.text.isEmpty) return;
+
+    int q = int.tryParse(qty.text) ?? 0;
+    double b = double.tryParse(buy.text) ?? 0;
+    double s = double.tryParse(sell.text) ?? 0;
+
     setState(() {
-      stock.add({
-        "brand": brand.text,
+      items.add({
         "model": model.text,
-        "qty": int.tryParse(qty.text) ?? 0,
+        "qty": q,
+        "buy": b,
+        "sell": s,
       });
-      brand.clear();
+      profit += (s - b) * q;
       model.clear();
       qty.clear();
+      buy.clear();
+      sell.clear();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Helmet Stock")),
+      appBar: AppBar(title: const Text("RiderPro Gear")),
       body: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Card(
-              child: ListTile(
-                title: const Text("Total Stock"),
-                trailing: Text(
-                  "$total",
-                  style: const TextStyle(fontSize: 22),
-                ),
-              ),
-            ),
+            Text("Profit: ₹${profit.toStringAsFixed(0)}",
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold)),
             TextField(
-              controller: brand,
-              decoration: const InputDecoration(labelText: "Brand"),
-            ),
+                controller: model,
+                decoration: const InputDecoration(labelText: "Model")),
             TextField(
-              controller: model,
-              decoration: const InputDecoration(labelText: "Model"),
-            ),
+                controller: qty,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Qty")),
             TextField(
-              controller: qty,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Quantity"),
-            ),
+                controller: buy,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Buy Price")),
+            TextField(
+                controller: sell,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Sell Price")),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: addProduct,
-              child: const Text("Add Product"),
-            ),
+                onPressed: addProduct,
+                child: const Text("Save Product")),
             const Divider(),
             Expanded(
               child: ListView.builder(
-                itemCount: stock.length,
+                itemCount: items.length,
                 itemBuilder: (_, i) {
-                  final p = stock[i];
+                  final p = items[i];
                   return ListTile(
-                    leading: const Icon(Icons.inventory),
-                    title: Text("${p["brand"]} ${p["model"]}"),
-                    trailing: Text("Qty ${p["qty"]}"),
+                    title: Text(p["model"]),
+                    subtitle: Text(
+                        "Qty: ${p["qty"]} | Buy ₹${p["buy"]} | Sell ₹${p["sell"]}"),
                   );
                 },
               ),
